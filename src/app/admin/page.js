@@ -1,17 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   ArrowLeft, Database, TrendingUp, AlertCircle, 
   CheckCircle, Upload, FileText, Download, Clock,
-  RefreshCw, Eye, Trash2 
+  RefreshCw, Eye, Trash2 , Loader2
 } from "lucide-react";
 import UnansweredQuestions from "@/components/UnansweredQuestions";
 
 export default function AdminPage() {
+  const { user, role, loading2 } = useAuth();
   const router = useRouter();
+  
+  // 1. ESTADOS
   const [stats, setStats] = useState({
     total_docs: 0,
     total_chunks: 0,
@@ -23,12 +27,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    cargarStats();
-    cargarDocumentosRecientes();
-  }, []);
-
-  const cargarStats = async () => {
+  // 2. FUNCIONES DE CARGA (Definidas antes de usarse en useEffect)
+  const cargarStats = useCallback(async () => {
     try {
       const res = await fetch('/api/stats');
       const data = await res.json();
@@ -36,9 +36,9 @@ export default function AdminPage() {
     } catch (error) {
       console.error("Error cargando stats:", error);
     }
-  };
+  }, []);
 
-  const cargarDocumentosRecientes = async () => {
+  const cargarDocumentosRecientes = useCallback(async () => {
     try {
       const res = await fetch('/api/documents?limit=5');
       const data = await res.json();
@@ -49,21 +49,36 @@ export default function AdminPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
+  // 3. EFECTOS
+  
+  // Protección de ruta
+  useEffect(() => {
+    if (!loading2 && role !== 'super_admin') {
+      router.push('/'); 
+    }
+  }, [role, loading2, router]);
+
+  // Carga de datos inicial
+  useEffect(() => {
+    if (!loading2 && role === 'super_admin') {
+      cargarStats();
+      cargarDocumentosRecientes();
+    }
+  }, [loading2, role, cargarStats, cargarDocumentosRecientes]);
+
+  // 4. HANDLERS
   const handleRefresh = () => {
     setRefreshing(true);
-    Promise.all([cargarStats(), cargarDocumentosRecientes()]);
+    cargarStats();
+    cargarDocumentosRecientes();
   };
 
   const handleDeleteDoc = async (id) => {
     if (!confirm('¿Estás seguro de eliminar este documento?')) return;
-    
     try {
-      const res = await fetch(`/api/documents?id=${id}`, {
-        method: 'DELETE'
-      });
-      
+      const res = await fetch(`/api/documents?id=${id}`, { method: 'DELETE' });
       if (res.ok) {
         cargarDocumentosRecientes();
         cargarStats();
@@ -74,10 +89,8 @@ export default function AdminPage() {
   };
 
   const handleExport = () => {
-    // Generar CSV con preguntas sin respuesta
     const csvContent = "data:text/csv;charset=utf-8,Pregunta,Veces,Fecha\n" + 
       recentDocs.map(d => `${d.title},${d.chunks || 0},${new Date().toLocaleDateString()}`).join('\n');
-    
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -89,6 +102,17 @@ export default function AdminPage() {
   const handleViewLogs = () => {
     router.push('/admin/logs');
   };
+
+  // 5. RETORNOS DE SEGURIDAD
+  if (loading2) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="animate-spin text-blue-600 w-10 h-10" />
+      </div>
+    );
+  }
+
+  if (role !== 'super_admin') return null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -125,7 +149,7 @@ export default function AdminPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Documentos</p>
@@ -134,8 +158,7 @@ export default function AdminPage() {
               <Database className="w-8 h-8 text-blue-500 opacity-75" />
             </div>
           </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Fragmentos</p>
@@ -144,8 +167,7 @@ export default function AdminPage() {
               <FileText className="w-8 h-8 text-green-500 opacity-75" />
             </div>
           </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Consultas</p>
@@ -154,8 +176,7 @@ export default function AdminPage() {
               <TrendingUp className="w-8 h-8 text-purple-500 opacity-75" />
             </div>
           </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Feedback 👍</p>
@@ -164,8 +185,7 @@ export default function AdminPage() {
               <CheckCircle className="w-8 h-8 text-green-500 opacity-75" />
             </div>
           </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Feedback 👎</p>
@@ -176,30 +196,21 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Dos columnas */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Columna izquierda - Documentos recientes */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
               <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
                 <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  Documentos recientes
+                  <Clock className="w-4 h-4" /> Documentos recientes
                 </h2>
               </div>
-              
               <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
                 {loading ? (
-                  <div className="p-8 text-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-                  </div>
+                  <div className="p-8 text-center"><Loader2 className="animate-spin mx-auto w-6 h-6 text-blue-600" /></div>
                 ) : recentDocs.length === 0 ? (
                   <div className="p-8 text-center text-gray-500">
                     <FileText className="w-12 h-12 mx-auto text-gray-300 mb-2" />
                     <p className="text-sm">No hay documentos</p>
-                    <Link href="/admin/upload" className="text-xs text-blue-600 hover:underline mt-2 inline-block">
-                      Subir primero
-                    </Link>
                   </div>
                 ) : (
                   recentDocs.map((doc) => (
@@ -214,20 +225,8 @@ export default function AdminPage() {
                           </div>
                         </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button 
-                            onClick={() => window.open(doc.url, '_blank')}
-                            className="p-1 text-gray-400 hover:text-blue-600"
-                            title="Ver documento"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteDoc(doc.id)}
-                            className="p-1 text-gray-400 hover:text-red-600"
-                            title="Eliminar"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <button onClick={() => window.open(doc.url, '_blank')} className="p-1 text-gray-400 hover:text-blue-600"><Eye className="w-4 h-4" /></button>
+                          <button onClick={() => handleDeleteDoc(doc.id)} className="p-1 text-gray-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </div>
                     </div>
@@ -236,40 +235,23 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
-
-          {/* Columna derecha - Preguntas sin respuesta */}
           <div className="lg:col-span-2">
             <UnansweredQuestions />
           </div>
         </div>
 
-        {/* Acciones rápidas */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button 
-            onClick={handleExport}
-            className="p-6 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all text-left group"
-          >
+          <button onClick={handleExport} className="p-6 bg-white rounded-xl border hover:bg-blue-50 transition-all text-left group">
             <Download className="w-8 h-8 text-gray-400 group-hover:text-blue-600 mb-3" />
-            <p className="font-medium text-gray-900">Exportar reporte</p>
-            <p className="text-sm text-gray-500">CSV con métricas y preguntas</p>
+            <p className="font-medium">Exportar reporte</p>
           </button>
-          
-          <button 
-            onClick={handleViewLogs}
-            className="p-6 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-green-300 hover:bg-green-50 transition-all text-left group"
-          >
+          <button onClick={handleViewLogs} className="p-6 bg-white rounded-xl border hover:bg-green-50 transition-all text-left group">
             <Clock className="w-8 h-8 text-gray-400 group-hover:text-green-600 mb-3" />
-            <p className="font-medium text-gray-900">Ver logs</p>
-            <p className="text-sm text-gray-500">Actividad del sistema</p>
+            <p className="font-medium">Ver logs</p>
           </button>
-          
-          <Link 
-            href="/admin/upload"
-            className="p-6 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all text-left group"
-          >
+          <Link href="/admin/upload" className="p-6 bg-white rounded-xl border hover:bg-purple-50 transition-all text-left group">
             <Upload className="w-8 h-8 text-gray-400 group-hover:text-purple-600 mb-3" />
-            <p className="font-medium text-gray-900">Subir documentos</p>
-            <p className="text-sm text-gray-500">PDF, Word, Excel</p>
+            <p className="font-medium">Subir documentos</p>
           </Link>
         </div>
       </main>

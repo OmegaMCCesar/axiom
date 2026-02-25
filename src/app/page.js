@@ -7,12 +7,14 @@ import { consultarAxiom } from "./admin/actions/consultarAxiom";
 import { registrarFeedback } from "./admin/actions/feedback";
 import SearchBar from "@/components/SearchBar";
 import ResultCard from "@/components/ResultCard";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Home() {
   const [query, setQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [historial, setHistorial] = useState([]);
   const [sugerencias, setSugerencias] = useState([]);
+  const { role } = useAuth()
   
   // Nuevos estados para el modo conversacional
   const [conversacion, setConversacion] = useState([]); // Guarda el hilo actual
@@ -134,10 +136,10 @@ export default function Home() {
           </span>
         </div>
         
-        <Link href="/admin" className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
+        {role === 'super_admin' &&  <Link href="/admin" className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
           <Settings className="w-4 h-4" />
           Administrar
-        </Link>
+        </Link>}
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-start pt-16 px-4 sm:px-6 lg:px-8 pb-32">
