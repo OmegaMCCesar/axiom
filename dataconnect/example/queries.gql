@@ -1,0 +1,41 @@
+query GetMyUserQueries @auth(level: USER) {
+  userQueries(where: {userId: {eq_expr: "auth.uid"}}, orderBy: [{createdAt: DESC}]) {
+    id
+    questionText
+    responseText
+    createdAt
+    feedbackRating
+    user {
+      displayName
+      email
+    }
+  }
+}
+
+mutation CreateDocument($title: String!, $content: String!, $documentType: String!, $categoryId: UUID!, $tags: [String!]) @auth(level: USER) {
+  document_insert(data: {
+    title: $title,
+    content: $content,
+    documentType: $documentType,
+    categoryId: $categoryId,
+    tags: $tags,
+    createdAt_expr: "request.time",
+    updatedAt_expr: "request.time"
+  })
+}
+
+mutation UpdateMyUserProfile($displayName: String, $department: String, $photoUrl: String) @auth(level: USER) {
+  user_update(key: {id_expr: "auth.uid"}, data: {
+    displayName: $displayName,
+    department: $department,
+    photoUrl: $photoUrl
+  })
+}
+
+query GetAllCategories @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public") {
+  categories {
+    id
+    name
+    description
+  }
+}

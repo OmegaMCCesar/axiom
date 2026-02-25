@@ -1,0 +1,39 @@
+type User @table {
+  email: String!
+  displayName: String!
+  role: String!
+  department: String
+  photoUrl: String
+}
+
+type Document @table {
+  title: String!
+  content: String!
+  documentType: String!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  tags: [String]
+  category: Category
+}
+
+type Category @table {
+  name: String!
+  description: String
+}
+
+type UserQuery @table {
+  user: User!
+  questionText: String!
+  responseText: String!
+  createdAt: Timestamp!
+  feedbackRating: Int
+}
+
+type Feedback @table {
+  user: User!
+  query: UserQuery!
+  feedbackText: String!
+  createdAt: Timestamp!
+  isHelpful: Boolean
+  suggestedImprovement: String
+}

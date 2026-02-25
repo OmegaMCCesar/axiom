@@ -1,0 +1,90 @@
+mutation CreateDemoData @transaction @auth(level: USER, insecureReason: "This is seed data and not for public use.") {
+  user_insertMany(data: [
+    {
+      id: "7a9b0c2d-1e3f-4a5b-6c7d-8e9f0a1b2c3d",
+      displayName: "Alice Smith",
+      email: "alice.smith@example.com",
+      role: "admin",
+      department: "Engineering"
+    },
+    {
+      id: "1b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e",
+      displayName: "Bob Johnson",
+      email: "bob.johnson@example.com",
+      role: "user",
+      department: "Marketing"
+    }
+  ])
+  category_insertMany(data: [
+    {
+      id: "c1a2b3c4-d5e6-7f8a-9b0c-1d2e3f4a5b6c",
+      name: "Product Documentation",
+      description: "Documentation for various products."
+    },
+    {
+      id: "e9f8d7c6-b5a4-3e2d-1c0b-9a8f7e6d5c4b",
+      name: "Internal Policies",
+      description: "Company internal policies and guidelines."
+    }
+  ])
+  document_insertMany(data: [
+    {
+      id: "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5f6a",
+      categoryId: "c1a2b3c4-d5e6-7f8a-9b0c-1d2e3f4a5b6c",
+      title: "Product A User Manual",
+      content: "This is the user manual for Product A. It contains instructions and troubleshooting tips.",
+      documentType: "Manual",
+      tags: ["product", "manual", "A"],
+      createdAt: "2023-01-15T10:00:00Z",
+      updatedAt: "2023-01-15T10:00:00Z"
+    },
+    {
+      id: "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+      categoryId: "e9f8d7c6-b5a4-3e2d-1c0b-9a8f7e6d5c4b",
+      title: "Expense Report Policy",
+      content: "This document outlines the company's expense report policy, including submission guidelines.",
+      documentType: "Policy",
+      tags: ["policy", "expenses"],
+      createdAt: "2023-02-20T11:30:00Z",
+      updatedAt: "2023-02-20T11:30:00Z"
+    }
+  ])
+  userQuery_insertMany(data: [
+    {
+      id: "q1e2r3t4-y5u6-i7o8-p9a0-s1d2f3g4h5j6",
+      userId: "7a9b0c2d-1e3f-4a5b-6c7d-8e9f0a1b2c3d",
+      questionText: "How do I reset my password?",
+      responseText: "You can reset your password by visiting the account settings page and clicking 'Forgot Password'.",
+      feedbackRating: 5,
+      createdAt: "2023-03-01T14:00:00Z"
+    },
+    {
+      id: "z1x2c3v4-b5n6-m7q8-w9e0-r1t2y3u4i5o6",
+      userId: "1b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e",
+      questionText: "What is the holiday schedule for 2024?",
+      responseText: "The 2024 holiday schedule is available on the internal portal under 'Company News'.",
+      feedbackRating: 4,
+      createdAt: "2023-03-05T09:45:00Z"
+    }
+  ])
+  feedback_insertMany(data: [
+    {
+      id: "f1e2e3d4-b5a6-c7d8-e9f0-a1b2c3d4e5f6",
+      queryId: "q1e2r3t4-y5u6-i7o8-p9a0-s1d2f3g4h5j6",
+      userId: "7a9b0c2d-1e3f-4a5b-6c7d-8e9f0a1b2c3d",
+      isHelpful: true,
+      feedbackText: "Very clear instructions, thank you!",
+      suggestedImprovement: null,
+      createdAt: "2023-03-01T14:05:00Z"
+    },
+    {
+      id: "g1h2j3k4-l5m6-n7b8-v9c0-x1z2a3s4d5f6",
+      queryId: "z1x2c3v4-b5n6-m7q8-w9e0-r1t2y3u4i5o6",
+      userId: "1b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e",
+      isHelpful: false,
+      feedbackText: "Could not find the document mentioned.",
+      suggestedImprovement: "Provide a direct link to the holiday schedule.",
+      createdAt: "2023-03-05T09:50:00Z"
+    }
+  ])
+}
