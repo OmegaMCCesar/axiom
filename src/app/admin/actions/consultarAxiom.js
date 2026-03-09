@@ -190,7 +190,7 @@ export async function consultarAxiom(preguntaUsuario, historial = []) {
   `;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-3.1-pro-preview',
     contents: prompt,
     config: {
       temperature: 0.2, // Un poco más de libertad para que redacte fluido sin inventar
